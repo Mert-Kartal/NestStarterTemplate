@@ -2,19 +2,28 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { RegisterDto, LoginDto } from './auth.dto';
 import * as argon2 from 'argon2';
+import { JwtService } from '../jwt/jwt.service';
 @Injectable()
 export class AuthService {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
+  ) {}
   async register(data: RegisterDto) {
     const existEmail = await this.userService.search(data.email);
     if (existEmail) {
       throw new BadRequestException('Email already exists');
     }
     const hashedPassword = await argon2.hash(data.password);
-    return await this.userService.add({
+    const user = await this.userService.add({
       ...data,
       password: hashedPassword,
     });
+    const { accessToken, refreshToken } = await this.jwtService.generateToken({
+      userId: user.id,
+      role: user.role,
+    });
+    return { accessToken, refreshToken };
   }
   async login(data: LoginDto) {
     const user = await this.userService.search(data.email);
@@ -25,6 +34,10 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new BadRequestException('Invalid credentials');
     }
-    return user;
+    const { accessToken, refreshToken } = await this.jwtService.generateToken({
+      userId: user.id,
+      role: user.role,
+    });
+    return { accessToken, refreshToken };
   }
 }
