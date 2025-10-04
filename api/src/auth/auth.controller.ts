@@ -13,4 +13,12 @@ export class AuthController {
   async login(@Body() data: LoginDto) {
     return await this.authService.login(data);
   }
+  @Post('refresh')
+  async refresh(@Headers('authorization') header: string) {
+    return await this.authService.refresh(header);
+  }
+  @Post('logout')
+  async logout(@Headers('authorization') header: string) {
+    return await this.authService.logout(header);
+  }
 }

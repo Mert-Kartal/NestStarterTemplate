@@ -40,4 +40,10 @@ export class AuthService {
     });
     return { accessToken, refreshToken };
   }
+  async refresh(header: string) {
+    return await this.jwtService.refresh(header);
+  }
+  async logout(header: string) {
+    return await this.jwtService.logout(header);
+  }
 }
